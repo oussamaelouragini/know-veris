@@ -1,0 +1,131 @@
+name: knowveris
+
+# There is no root .env by design. Everything a container reads at runtime comes
+# from that service's own env file, next to the code that owns it:
+#
+#   apps/api/.env  apps/web/.env  infra/postgres/.env
+#   infra/keycloak/.env  infra/ollama/.env
+#
+# Run `npm run setup` once to create them from the .env.example templates.
+# Host port mappings are the only compose-level knobs left; they carry inline
+# defaults, so no .env file is needed for interpolation. Override per shell:
+#   API_PORT=8001 docker compose up -d
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: knowveris-postgres
+    restart: unless-stopped
+    env_file: ./infra/postgres/.env
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Runs only on an empty data dir. `docker compose down -v` to re-trigger.
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      # $$ escapes compose interpolation: these resolve inside the container,
+      # from the env file above, not from a root .env.
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: knowveris-keycloak
+    restart: unless-stopped
+    # dev mode = embedded H2 + no TLS. Local only; the realm JSON is the
+    # source of truth, so a wiped H2 costs nothing (PLAN.md §3).
+    command: ["start-dev", "--import-realm"]
+    env_file: ./infra/keycloak/.env
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      # The realm file only — the directory also holds .env, which the importer
+      # would choke on if it were mounted whole.
+      - ./infra/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    healthcheck:
+      # No curl/wget in the KC 26 image; use the JVM's own health probe.
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; grep -q '\"status\": \"UP\"' <&3",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: knowveris-ollama
+    restart: unless-stopped
+    env_file: ./infra/ollama/.env
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: knowveris-api
+    restart: unless-stopped
+    # The image entrypoint runs `alembic upgrade head` before uvicorn, so the
+    # schema is always at head by the time the app accepts traffic.
+    env_file: ./apps/api/.env
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./apps/api:/app
+      - api_storage:/app/storage
+      # Synthetic bootstrap corpus, read-only, for the ingestion test suite.
+      - ./corpus/bootstrap:/app/tests/data/bootstrap:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  web:
+    build:
+      # Workspace root: npm workspaces hoist node_modules above apps/web.
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: knowveris-web
+    restart: unless-stopped
+    env_file: ./apps/web/.env
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    volumes:
+      - ./apps/web:/workspace/apps/web
+      - ./tsconfig.base.json:/workspace/tsconfig.base.json:ro
+      # Anonymous volumes keep the image's installed trees: the bind mount above
+      # would otherwise hide apps/web/node_modules with the (empty) host dir.
+      # After adding a dependency: `npx nx run web:install`.
+      - /workspace/node_modules
+      - /workspace/apps/web/node_modules
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  keycloak_data:
+  ollama_models:
+  api_storage:

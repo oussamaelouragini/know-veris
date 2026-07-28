@@ -1,0 +1,21 @@
+{
+  "name": "knowveris",
+  "version": "0.1.0",
+  "private": true,
+  "description": "KnowVeris IA — Nx monorepo (apps/api, apps/web) running on Docker Compose",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "setup": "node tools/scripts/init-env.mjs",
+    "up": "docker compose up -d",
+    "down": "docker compose down",
+    "reset": "docker compose down -v",
+    "build": "docker compose build",
+    "logs": "docker compose logs -f",
+    "ps": "docker compose ps"
+  },
+  "devDependencies": {
+    "nx": "23.1.0"
+  }
+}

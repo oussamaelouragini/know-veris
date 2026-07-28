@@ -1,0 +1,5 @@
+# Shell scripts are executed by /bin/sh inside Linux containers — a CRLF
+# checkout on Windows would make them fail with "\r: not found".
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.env.example text eol=lf

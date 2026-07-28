@@ -1,0 +1,29 @@
+# Root build context (used by apps/web/Dockerfile). apps/api has its own.
+.git/
+.github/
+.gitignore
+.gitattributes
+.nx/
+.claude/
+.vscode/
+.idea/
+node_modules/
+**/node_modules/
+**/dist/
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+**/*.tsbuildinfo
+**/coverage/
+**/*.log
+# No env file is ever COPYed — keep every variant out of the context entirely.
+**/.env
+**/.env.*
+**/.DS_Store
+**/Thumbs.db
+corpus/
+docs/
+week/
+*.md

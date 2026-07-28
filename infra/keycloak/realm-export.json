@@ -1,0 +1,171 @@
+{
+  "id": "knowveris",
+  "realm": "knowveris",
+  "displayName": "KnowVeris IA",
+  "enabled": true,
+
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "editUsernameAllowed": false,
+
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "minimumQuickLoginWaitSeconds": 60,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 28800,
+  "offlineSessionIdleTimeout": 2592000,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+
+  "sslRequired": "none",
+
+  "roles": {
+    "realm": [
+      {
+        "name": "employee",
+        "description": "Bank employee. Can ask questions and read their own conversations.",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "knowveris"
+      },
+      {
+        "name": "admin",
+        "description": "Administrator. Manages documents and employee accounts. Includes employee.",
+        "composite": true,
+        "composites": {
+          "realm": ["employee"]
+        },
+        "clientRole": false,
+        "containerId": "knowveris"
+      }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "knowveris-web",
+      "name": "KnowVeris SPA",
+      "description": "React SPA. Public client, authorization code + PKCE S256.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-knowveris-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "knowveris-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "basic",
+        "email"
+      ]
+    },
+    {
+      "clientId": "knowveris-api",
+      "name": "KnowVeris API",
+      "description": "Bearer-only resource server. Audience validated by FastAPI.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
+    },
+    {
+      "clientId": "knowveris-admin-cli",
+      "name": "KnowVeris Admin CLI",
+      "description": "Confidential service account. FastAPI uses this to call the Admin REST API (ADR-006).",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "secret": "change-me-in-local-env",
+      "attributes": {
+        "client.secret.creation.time": "0"
+      }
+    }
+  ],
+
+  "users": [
+    {
+      "username": "service-account-knowveris-admin-cli",
+      "enabled": true,
+      "serviceAccountClientId": "knowveris-admin-cli",
+      "clientRoles": {
+        "realm-management": ["manage-users", "view-users", "view-realm"]
+      }
+    },
+    {
+      "username": "employee",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "employee@knowveris.local",
+      "firstName": "Test",
+      "lastName": "Employee",
+      "credentials": [{ "type": "password", "value": "employee123", "temporary": false }],
+      "realmRoles": ["employee"]
+    },
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "admin@knowveris.local",
+      "firstName": "Site",
+      "lastName": "Admin",
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }],
+      "realmRoles": ["admin"]
+    }
+  ],
+
+  "smtpServer": {},
+  "eventsEnabled": true,
+  "eventsExpiration": 604800,
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true
+}

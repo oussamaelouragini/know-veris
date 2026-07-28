@@ -1,0 +1,59 @@
+# --- Secrets: one .env per service (apps/*, infra/*), never at the root ---
+# Catch-all so a .env.production / .env.dev can never slip in; the committed
+# templates are the single exception.
+.env
+.env.*
+!.env.example
+
+# --- Corpus: demo docs are real public PDFs, too heavy for git (see PLAN.md §7) ---
+corpus/demo/*
+!corpus/demo/.gitkeep
+!corpus/demo/README.md
+
+# --- Uploaded documents at runtime ---
+storage/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# --- Node ---
+node_modules/
+dist/
+.vite/
+*.local
+*.tsbuildinfo
+coverage/
+npm-debug.log*
+
+# --- Nx ---
+.nx/
+.cursor/
+.vscode/nx*
+
+# --- Agent tooling: settings.json holds machine-local permissions ---
+.claude/
+
+# --- Keycloak export working dir ---
+infra/keycloak/export-tmp/
+
+# --- Logs ---
+*.log
+
+# --- OS / IDE ---
+Thumbs.db
+desktop.ini
+.DS_Store
+.idea/
+*.swp
+*~

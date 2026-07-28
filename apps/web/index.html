@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta
+      name="description"
+      content="KnowVeris AI — internal assistant answering from the bank's indexed documents only, with the exact source cited."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#020817" media="(prefers-color-scheme: dark)" />
+    <title>KnowVeris AI</title>
+    <script>
+      // Apply the stored theme before the first paint. Without this, the app
+      // renders light and React's useTheme effect flips it to dark one frame
+      // later — a visible white flash on every reload. Mirrors lib/theme.ts.
+      (function () {
+        try {
+          var stored = localStorage.getItem("knowveris-theme");
+          var dark =
+            stored === "dark" ||
+            (stored === null && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", dark);
+        } catch (e) {
+          /* private mode / storage blocked — fall back to the light default */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

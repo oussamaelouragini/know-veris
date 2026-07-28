@@ -1,0 +1,207 @@
+# Golden set — bootstrap corpus (5 synthetic AML/CFT docs, FR/EN/AR).
+#
+# This is the DETERMINISTIC bootstrap golden set used to measure the pipeline on
+# committed synthetic documents. The larger ~35-question demo golden set (FATF /
+# ACPR public docs) is authored later, once corpus/demo/ is collected (PLAN §6,
+# §7). Question strings and expected substrings are intentionally multilingual
+# and must not be translated.
+#
+# Types (PLAN §6): factual · multi_hop · negative · acronym · cross_lingual.
+# expected_sources match on `document` (filename); pages/sections are recorded
+# for reference and stricter future metrics. expected_answer_contains is in the
+# language of the question (case-insensitive substring), used by generation eval.
+
+# ---------- factual (answer lives in a single chunk) ----------
+- id: fr-seuil-factual-001
+  question: "Quel est le seuil réglementaire pour une opération occasionnelle ?"
+  lang: fr
+  category: cdd
+  type: factual
+  expected_sources:
+    - document: "fr-obligations-vigilance.pdf"
+      pages: [1]
+  expected_answer_contains: ["15 000"]
+  must_refuse: false
+
+- id: en-retention-factual-002
+  question: "How long must identification and transaction records be kept?"
+  lang: en
+  category: recordkeeping
+  type: factual
+  expected_sources:
+    - document: "en-customer-due-diligence.docx"
+      sections: ["4. Record Keeping"]
+  expected_answer_contains: ["five years"]
+  must_refuse: false
+
+- id: fr-tipping-factual-003
+  question: "Peut-on informer le client qu'une déclaration de soupçon le concernant a été faite ?"
+  lang: fr
+  category: sar
+  type: factual
+  expected_sources:
+    - document: "fr-declaration-soupcon.docx"
+      sections: ["3. Confidentialité et interdiction du tipping-off"]
+  expected_answer_contains: ["interdit"]
+  must_refuse: false
+
+- id: en-sanctions-onboarding-factual-004
+  question: "When are new customers screened against the sanctions lists?"
+  lang: en
+  category: sanctions
+  type: factual
+  expected_sources:
+    - document: "en-sanctions-screening.pdf"
+      pages: [1]
+  expected_answer_contains: ["before"]
+  must_refuse: false
+
+- id: ar-retention-factual-005
+  question: "كم مدة حفظ وثائق تحديد الهوية والمستندات المتعلقة بالعمليات ؟"
+  lang: ar
+  category: recordkeeping
+  type: factual
+  expected_sources:
+    - document: "ar-alainaya-alwajiba.docx"
+      sections: ["4. حفظ الوثائق"]
+  expected_answer_contains: ["خمس سنوات"]
+  must_refuse: false
+
+- id: en-legal-entity-factual-006
+  question: "What document is required to verify the identity of a legal entity?"
+  lang: en
+  category: cdd
+  type: factual
+  expected_sources:
+    - document: "en-customer-due-diligence.docx"
+      sections: ["2. Customer Identification and Verification"]
+  expected_answer_contains: ["certificate of incorporation"]
+  must_refuse: false
+
+- id: fr-whistleblower-factual-007
+  question: "Le collaborateur qui effectue un signalement de bonne foi est-il protégé ?"
+  lang: fr
+  category: sar
+  type: factual
+  expected_sources:
+    - document: "fr-declaration-soupcon.docx"
+      sections: ["4. Protection du déclarant"]
+  expected_answer_contains: ["immunité"]
+  must_refuse: false
+
+- id: en-sanctions-match-factual-008
+  question: "What happens when there is a positive sanctions match on a customer?"
+  lang: en
+  category: sanctions
+  type: factual
+  expected_sources:
+    - document: "en-sanctions-screening.pdf"
+      pages: [1]
+  expected_answer_contains: ["block"]
+  must_refuse: false
+
+# ---------- acronym (banking jargon — value of hybrid search) ----------
+- id: en-pep-acronym-009
+  question: "To whom does enhanced due diligence apply, including PEPs?"
+  lang: en
+  category: cdd
+  type: acronym
+  expected_sources:
+    - document: "en-customer-due-diligence.docx"
+      sections: ["3. Risk-Based Due Diligence"]
+  expected_answer_contains: ["politically exposed"]
+  must_refuse: false
+
+- id: fr-lcbft-acronym-010
+  question: "Que recouvre le dispositif LCB-FT ?"
+  lang: fr
+  category: cdd
+  type: acronym
+  expected_sources:
+    - document: "fr-obligations-vigilance.pdf"
+      pages: [1]
+  expected_answer_contains: ["blanchiment"]
+  must_refuse: false
+
+# ---------- multi_hop (requires 2+ chunks) ----------
+- id: en-threshold-retention-multi-011
+  question: "What is the occasional-transaction threshold, and how long are records kept afterward?"
+  lang: en
+  category: cdd
+  type: multi_hop
+  expected_sources:
+    - document: "en-customer-due-diligence.docx"
+      sections: ["1. Purpose and Scope", "4. Record Keeping"]
+  expected_answer_contains: ["15,000", "five years"]
+  must_refuse: false
+
+- id: fr-soupcon-multi-012
+  question: "Quels indices doivent alerter le collaborateur et qui doit-il informer en cas de soupçon ?"
+  lang: fr
+  category: sar
+  type: multi_hop
+  expected_sources:
+    - document: "fr-declaration-soupcon.docx"
+      sections: ["1. Principe de la déclaration de soupçon", "2. Indices à surveiller"]
+  expected_answer_contains: ["conformité"]
+  must_refuse: false
+
+# ---------- cross_lingual (question language != source language) ----------
+- id: en-to-fr-soupcon-xling-013
+  question: "Is a bank employee allowed to warn a customer that a suspicious transaction report was filed?"
+  lang: en
+  category: sar
+  type: cross_lingual
+  expected_sources:
+    - document: "fr-declaration-soupcon.docx"
+      sections: ["3. Confidentialité et interdiction du tipping-off"]
+  expected_answer_contains: []
+  must_refuse: false
+
+- id: ar-to-en-sanctions-xling-014
+  question: "متى يتم فحص العملاء الجدد مقابل قوائم العقوبات قبل تفعيل الحساب ؟"
+  lang: ar
+  category: sanctions
+  type: cross_lingual
+  expected_sources:
+    - document: "en-sanctions-screening.pdf"
+      pages: [1]
+  expected_answer_contains: []
+  must_refuse: false
+
+# ---------- negative (out of corpus — the anti-hallucination guardrail) ----------
+- id: fr-crypto-negative-015
+  question: "Quelle est la politique de la banque sur les crypto-actifs et le bitcoin ?"
+  lang: fr
+  category: out_of_scope
+  type: negative
+  expected_sources: []
+  expected_answer_contains: []
+  must_refuse: true
+
+- id: en-savings-rate-negative-016
+  question: "What is the current interest rate on a personal savings account?"
+  lang: en
+  category: out_of_scope
+  type: negative
+  expected_sources: []
+  expected_answer_contains: []
+  must_refuse: true
+
+- id: en-vacation-negative-017
+  question: "How many paid vacation days are bank employees entitled to each year?"
+  lang: en
+  category: out_of_scope
+  type: negative
+  expected_sources: []
+  expected_answer_contains: []
+  must_refuse: true
+
+- id: ar-mortgage-negative-018
+  question: "ما هو الحد الأقصى لمبلغ القرض العقاري الذي يمنحه البنك ؟"
+  lang: ar
+  category: out_of_scope
+  type: negative
+  expected_sources: []
+  expected_answer_contains: []
+  must_refuse: true
